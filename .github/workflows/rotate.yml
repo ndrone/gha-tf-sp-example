@@ -28,11 +28,5 @@ jobs:
         run: terraform state list > currentState
       - name: Create Filter State
         run: awk '/azuread_service_principal_password/ {print}' currentState > filterState
-      - name: Echo
-        run: for target in $(cat filterState); do echo $target; done
-      - name: Filter Password Targets
-        run: echo "targets=$(awk -v d="," '{s=(NR==1?s:s d)$0}END{print s}' filterState)" >> $GITHUB_ENV
-      - name: Echo
-        run: echo ${{ env.targets }}
-      # - name: Terraform Replace
-      #   run: for target in ${{ env.targets }}; do terraform apply -replace="$target" -input=false -no-color -auto-approve; done
+      - name: Terraform Replace
+        run: for target in $(cat filterState); do terraform apply -replace="$target" -input=false -no-color -auto-approve; done
