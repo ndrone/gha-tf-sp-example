@@ -1,0 +1,32 @@
+name: Rotate Secrets
+
+on:
+  schedule:
+    - cron: '0 1 1 12/3 *' # run every 4 months.
+  workflow_dispatch:
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  TF_IN_AUTOMATION: true
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.8
+      - name: Terraform Init
+        run: terraform init -input=false -no-color
+      - name: Terraform List State
+        run: terraform state list > currentState
+      - name: Filter Password Targets
+        run: echo "targets=$(awk '/azuread_service_principal_password/ {print}' currentState | tr '\n' ',' | sed 's/,$/\n/')" >> $GITHUB_ENV
+      - name: Terraform Replace
+        run: for target in ${{ env.targets }}; do terraform apply -replace="$target" -input=false -no-color -auto-approve; done
