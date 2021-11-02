@@ -26,10 +26,12 @@ jobs:
         run: terraform init -input=false -no-color
       - name: Terraform List State
         run: terraform state list > currentState
+      - name: Create Filter State
+        run: awk '/azuread_service_principal_password/ {print}' currentState > filterState
       - name: Echo
-        run: awk '/azuread_service_principal_password/ {print}' currentState | awk -v d="," '{s=(NR==1?s:s d)$0}END{print s}'
+        run: awk -v d="," '{s=(NR==1?s:s d)$0}END{print s}' filterState
       - name: Filter Password Targets
-        run: echo "targets=$(awk '/azuread_service_principal_password/ {print}' currentState | tr '\n' ',' | sed 's/,$/\n/')" >> $GITHUB_ENV
+        run: echo "targets=$(awk -v d="," '{s=(NR==1?s:s d)$0}END{print s}' filterState)" >> $GITHUB_ENV
       - name: Echo
         run: echo ${{ env.targets }}
       # - name: Terraform Replace
