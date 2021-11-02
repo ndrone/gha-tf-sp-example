@@ -28,5 +28,7 @@ jobs:
         run: terraform state list > currentState
       - name: Create Filter State
         run: awk '/azuread_service_principal_password/ {print}' currentState > filterState
-      - name: Terraform Replace
-        run: for target in $(cat filterState); do terraform apply -replace="$target" -input=false -no-color -auto-approve; done
+      - name: Echo
+        run: cat filterState
+      # - name: Terraform Replace
+      #   run: for target in $(cat filterState); do terraform apply -replace="$target" -input=false -no-color -auto-approve; done
