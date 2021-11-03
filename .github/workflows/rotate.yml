@@ -30,6 +30,5 @@ jobs:
         run: awk '/azuread_service_principal_password/ {print}' currentState > filterState
       - name: Echo
         run: while read target; do echo $target; done < filterState
-        # run: for target in $(cat filterState); do echo $target; done
-      # - name: Terraform Replace
-      #   run: for target in $(cat filterState); do terraform apply -replace="$target" -input=false -no-color -auto-approve; done
+      - name: Terraform Replace
+        run: while read target; do terraform apply -replace="$target" -input=false -no-color -auto-approve; done < filterState
