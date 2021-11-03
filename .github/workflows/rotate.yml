@@ -25,10 +25,10 @@ jobs:
       - name: Terraform Init
         run: terraform init -input=false -no-color
       - name: Terraform List and Filter State
-      # Pull all the resources from the state file and filter to the onces we want to replace
-        run: terraform state list | awk '/azuread_service_principal_password/ {print}' > filterState
-        # We are going to loop through each line in the file
-        # Since GitHub Actions seems to read ::debug:stdout: from the file too we want to just
-        # actually run the replace on actual Terraform resource addresses hence the if check
+        # Pull all the resources from the state file put them in a file for the next step
+        run: terraform state list > stateList
+        # We are going to loop through each line in the file of the resources
+        # We only want to replace the service_principal_password resource, so we
+        # need to check the start of each resource starts with the correct address.
       - name: Terraform Replace
-        run: while read target; do if [[ "${target:0:34}" == "azuread_service_principal_password" ]]; then terraform apply -replace="$target" -input=false -no-color -auto-approve; fi; done < filterState
+        run: while read target; do if [[ "${target:0:34}" == "azuread_service_principal_password" ]]; then terraform apply -replace="$target" -input=false -no-color -auto-approve; fi; done < stateList
