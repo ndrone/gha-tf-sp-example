@@ -24,7 +24,7 @@ jobs:
           terraform_version: 1.0.8
       - name: Terraform Init
         run: terraform init -input=false -no-color
-      - name: Terraform List and Filter State
+      - name: Terraform List State Resources
         # Pull all the resources from the state file put them in a file for the next step
         run: terraform state list > stateList
         # We are going to loop through each line in the file of the resources
