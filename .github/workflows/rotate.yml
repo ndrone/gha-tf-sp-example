@@ -24,9 +24,12 @@ jobs:
           terraform_version: 1.0.8
       - name: Terraform Init
         run: terraform init -input=false -no-color
-      - name: Terraform List State
-        run: terraform state list > currentState
-      - name: Create Filter State
-        run: awk '/azuread_service_principal_password/ {print}' currentState > filterState
+      - name: Terraform List and Filter State
+      # Pull all the resources from the state file and filter to the onces we want to replace
+        run: terraform state list | awk '/azuread_service_principal_password/ {print}' > filterState
+      - name: Echo
+        run: cat filterState
+      # - name: Create Filter State
+      #   run: awk '/azuread_service_principal_password/ {print}' currentState > filterState
       - name: Terraform Replace
         run: while read target; do terraform apply -replace="$target" -input=false -no-color -auto-approve; done < filterState
