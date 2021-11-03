@@ -27,5 +27,7 @@ jobs:
       - name: Terraform List and Filter State
       # Pull all the resources from the state file and filter to the onces we want to replace
         run: terraform state list | awk '/azuread_service_principal_password/ {print}' > filterState
+      - name: echo
+        run: while read target; do echo "${target:0:33}"; done < filterState
       - name: Terraform Replace
         run: while read target; do if [[ "${target:0:33}" == "azuread_service_principal_password" ]]; then terraform apply -replace="$target" -input=false -no-color -auto-approve; fi; done < filterState
