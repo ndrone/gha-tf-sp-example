@@ -13,7 +13,7 @@ env:
   TF_IN_AUTOMATION: true
 
 jobs:
-  apply:
+  replace:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,11 +24,11 @@ jobs:
           terraform_version: 1.0.8
       - name: Terraform Init
         run: terraform init -input=false -no-color
-      - name: Terraform List State
-        run: terraform state list > currentState
-      - name: Filter Password Targets
-        run: |
-          echo "targets=$(awk '/azuread_service_principal_password/ {print}' currentState | tr '\n' ',' | sed 's/,$/\n/')" >> $GITHUB_ENV
-          echo $targets
-      # - name: Terraform Replace
-      #   run: for target in ${{ env.targets }}; do terraform apply -replace="$target" -input=false -no-color -auto-approve; done
+      - name: Terraform List and Filter State
+      # Pull all the resources from the state file and filter to the onces we want to replace
+        run: terraform state list | awk '/azuread_service_principal_password/ {print}' > filterState
+        # We are going to loop through each line in the file
+        # Since GitHub Actions seems to read ::debug:stdout: from the file too we want to just
+        # actually run the replace on actual Terraform resource addresses hence the if check
+      - name: Terraform Replace
+        run: while read target; do if [[ "${target:0:34}" == "azuread_service_principal_password" ]]; then terraform apply -replace="$target" -input=false -no-color -auto-approve; fi; done < filterState
