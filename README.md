@@ -28,6 +28,17 @@ Terraform state file, iterating over that list, and looking for the resources
 want to have Terraform do a forcing replacement of the resource, causing the 
 password to be changed.
 
+```
+# Pull all the resources from the state file put them in a file for the next step
+- name: Terraform List State Resources
+  run: terraform state list > stateList
+  # We are going to loop through each line in the file of the resources
+  # We only want to replace the service_principal_password resource, so we
+  # need to check the start of each resource starts with the correct address.
+- name: Terraform Replace
+  run: while read target; do if [[ "${target:0:34}" == "azuread_service_principal_password" ]]; then terraform apply -replace="$target" -input=false -no-color -auto-approve; fi; done < stateList
+```
+
 expanded single line bash script
 ```
 while read target; do 
